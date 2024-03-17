@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class JoinController {
     private final JoinService joinService;
 
-//    @Operation(summary = "회원가입", description = "회원가입", tags = {"User Sign"})
+    @Operation(summary = "회원가입", description = "회원가입", tags = {"User Sign"})
     @PostMapping("/join")
     public String joinProcess(JoinDto joinDto) {
         joinService.joinProcess(joinDto);
