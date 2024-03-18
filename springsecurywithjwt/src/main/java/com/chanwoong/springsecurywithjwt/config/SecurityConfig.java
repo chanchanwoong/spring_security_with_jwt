@@ -3,6 +3,7 @@ package com.chanwoong.springsecurywithjwt.config;
 import com.chanwoong.springsecurywithjwt.jwt.JWTFilter;
 import com.chanwoong.springsecurywithjwt.jwt.JWTUtil;
 import com.chanwoong.springsecurywithjwt.jwt.LoginFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -41,6 +46,28 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // cors 처리
+        http
+                .cors((cors) -> cors
+                        .configurationSource(new CorsConfigurationSource() {
+                            @Override
+                            public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
+                                CorsConfiguration configuration = new CorsConfiguration();
+
+                                // 3000 포트의 입력을 허용
+                                configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                                // 허용할 메서드(GET, POST, PUT, DELETE)
+                                configuration.setAllowedMethods(Collections.singletonList("*"));
+                                // 나머지
+                                configuration.setAllowCredentials(true);
+                                configuration.setAllowedHeaders(Collections.singletonList("*"));
+                                configuration.setMaxAge(3600L);
+                                configuration.setExposedHeaders(Collections.singletonList("Authorization"));
+                                return configuration;
+                            }
+                        }));
+
+
         // csrf disable
         http
                 .csrf((auth) -> auth.disable());
