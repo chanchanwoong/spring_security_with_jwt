@@ -1,5 +1,7 @@
 package com.chanwoong.springsecurywithjwt.config;
 
+import com.chanwoong.springsecurywithjwt.jwt.JWTFilter;
+import com.chanwoong.springsecurywithjwt.jwt.JWTUtil;
 import com.chanwoong.springsecurywithjwt.jwt.LoginFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -15,11 +17,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     // 커스텀한 필터 추가한 것에 AuthenticationManager가 필요해서 빈 등록 과정
     private final AuthenticationConfiguration authenticationConfiguration;
+    private final JWTUtil jwtUtil;
+
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil) {
+        this.authenticationConfiguration = authenticationConfiguration;
+        this.jwtUtil = jwtUtil;
+    }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
@@ -49,14 +57,18 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/login", "/", "/join", "/swagger-ui/**", "/swagger-resources/**", "/api-docs/**").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
+                        .requestMatchers("/admin").hasRole("ADMIN")     // admin 경로는 ADMIN 직책을 가진 사람만 접근 가능하다.
                         .anyRequest().authenticated());
 
+
+        // JWTFilter 필터 추가 등록
+        http
+                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
 
         // 우리가 만든 필터(LoginFilter) 등록
         // LoginFilter()는 인자를 받음 (AuthenticationManager() 메소드에 authenticationConfiguration 객체를 넣어야 함) 따라서 등록 필요
         http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
 
         //세션 설정
